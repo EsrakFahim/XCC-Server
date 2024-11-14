@@ -13,7 +13,11 @@ const router = Router();
 
 // Route for creating a new project with file uploads
 router.route("/create").post(
-      upload.array("files", 10), // Handling multiple file uploads
+      upload.fields([
+            { name: "coverImage", maxCount: 1 }, // Single cover image
+            { name: "showcaseImages", maxCount: 10 }, // Up to 10 showcase images
+            { name: "additionalImages", maxCount: 10 }, // Up to 10 additional images
+      ]),
       CreateProject
 );
 

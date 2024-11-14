@@ -1,134 +1,117 @@
+// controllers/Projects/CreateProjects.controller.js
 import { asyncHandler } from "../../utils/asyncHandler.js";
 import { apiResponse } from "../../utils/apiResponse.js";
 import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 import { Projects } from "../../models/Projects/Projects.model.js";
 
-// Controller for creating a new project
-const CreateProject = asyncHandler(async (req, res, next) => {
-      try {
-            // Destructure fields from request body
-            const {
-                  name,
-                  description,
-                  client,
-                  projectType,
-                  status,
-                  startDate,
-                  endDate,
-                  projectManager,
-                  team,
-                  budget,
-                  spent,
-                  tech,
-                  notes,
-                  livePreview,
-                  sourceFile,
-                  isActive,
-            } = req?.body;
+const CreateProject = asyncHandler(async (req, res) => {
+      // Destructure fields from request body
+      const {
+            title,
+            description,
+            location,
+            client,
+            projectType,
+            startDate,
+            endDate,
+            strategies,
+            approach,
+            results,
+            receivedGoals,
+            isFeatured,
+            isSliderActive,
+            testimonial,
+            seo,
+      } = req.body;
 
-            console.log(
-                  name,
-                  description,
-                  client,
-                  projectType,
-                  status,
-                  startDate,
-                  endDate,
-                  projectManager,
-                  team,
-                  budget,
-                  spent,
-                  tech,
-                  notes,
-                  livePreview,
-                  sourceFile,
-                  isActive
-            );
+      // Validate required fields
+      if (!title || !description || !location || !projectType) {
+            throw new apiErrorHandler(400, "Please provide all required fields");
+      }
 
-            // Destructure files from request (if any)
-            const files = req.files; // Multer parses the files into `req.files`
+      // Check if a project with the same title already exists
+      const existingProject = await Projects.findOne({ title });
+      if (existingProject) {
+            throw new apiErrorHandler(400, "Project already exists");
+      }
 
-            console.log("Files Received:", files);
+      // Handle file uploads
+      let coverImageUrl = null;
+      const showcaseImageUrls = [];
+      const additionalImageUrls = [];
 
-            // Validate required fields
-            if (
-                  !name ||
-                  !description ||
-                  !projectType ||
-                  !status ||
-                  !projectManager ||
-                  !startDate ||
-                  !team ||
-                  !tech
-            ) {
-                  throw new apiErrorHandler(
-                        400,
-                        "Please provide all required fields"
-                  );
+      if (req.files) {
+            const { coverImage, showcaseImages, additionalImages } = req.files;
+
+
+            // Upload cover image
+            if (coverImage && coverImage[0]) {
+                  const uploadedCover = await uploadFileCloudinary(coverImage[0].path);
+                  coverImageUrl = uploadedCover?.url || null;
             }
 
-            // Check if a project with the same name already exists
-            const existingProject = await Projects.findOne({ name });
-            if (existingProject) {
-                  throw new apiErrorHandler(400, "Project already exists");
-            }
-
-            console.log("Received files:", files);
-
-            // Upload files to Cloudinary (or your storage solution)
-            let uploadedFiles = [];
-            if (files && files.length > 0) {
-                  for (const file of files) {
-                        const uploadedFile = await uploadFileCloudinary(
-                              file?.path
-                        );
-                        console.log("Uploaded File:", uploadedFile);
-                        uploadedFiles.push({
-                              url: uploadedFile.url,
-                              name: file.originalname,
-                        });
+            // Upload showcase images
+            if (showcaseImages && showcaseImages.length > 0) {
+                  for (const file of showcaseImages) {
+                        const uploadedFile = await uploadFileCloudinary(file.path);
+                        console.log("uploadedFile", uploadedFile);
+                        if (uploadedFile) {
+                              showcaseImageUrls.push({
+                                    url: uploadedFile.url,
+                                    name: file.originalname,
+                              });
+                        }
                   }
             }
 
-            // Create the new project
-            const newProject = await Projects.create({
-                  name,
-                  description,
-                  client: client || "",
-                  projectType,
-                  status,
-                  startDate,
-                  endDate: endDate || null,
-                  projectManager,
-                  team: Array.isArray(team) ? team : [team],
-                  budget: budget || 0,
-                  spent: spent || 0,
-                  tech: Array.isArray(tech) ? tech : [tech],
-                  files: uploadedFiles,
-                  notes: notes || "",
-                  livePreview: livePreview || null,
-                  sourceFile: sourceFile || null,
-                  isActive: isActive !== undefined ? isActive : true,
-            });
-
-            if (!newProject) {
-                  throw new apiErrorHandler(500, "Error creating project");
+            // Upload additional images
+            if (additionalImages && additionalImages.length > 0) {
+                  for (const file of additionalImages) {
+                        const uploadedFile = await uploadFileCloudinary(file.path);
+                        console.log("uploadedFile from additionalImages", uploadedFile);
+                        if (uploadedFile) {
+                              additionalImageUrls.push({
+                                    url: uploadedFile.url,
+                                    name: file.originalname,
+                              });
+                        }
+                  }
             }
 
-            // Send a success response
-            return res
-                  .status(201)
-                  .json(
-                        new apiResponse(
-                              201,
-                              newProject,
-                              "Project created successfully"
-                        )
-                  );
-      } catch (error) {
-            throw new apiErrorHandler(500, error.message || "Server Error");
+            console.log("coverImageUrl from in", coverImageUrl);
       }
+
+      console.log("showcaseImageUrls from out", showcaseImageUrls);
+
+      // Create the new project
+      const newProject = await Projects.create({
+            title,
+            description,
+            location,
+            client: client || "",
+            projectType,
+            startDate,
+            endDate: endDate || null,
+            strategies,
+            approach,
+            results,
+            receivedGoals,
+            isFeatured,
+            isSliderActive,
+            testimonial,
+            seo,
+            coverImage: coverImageUrl,
+            showcaseImages: showcaseImageUrls,
+            additionalImages: additionalImageUrls,
+      });
+
+      if (!newProject) {
+            throw new apiErrorHandler(500, "Error creating project");
+      }
+
+      // Send a success response
+      return res.status(201).json(new apiResponse(201, newProject, "Project created successfully"));
 });
 
 export { CreateProject };
