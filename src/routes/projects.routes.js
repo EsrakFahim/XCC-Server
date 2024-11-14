@@ -22,15 +22,15 @@ router.route("/create").post(
 );
 
 // Route for updating an existing project with file uploads
-router.route("/update/:id").put(
+router.route("/update/:projectId").put(
       upload.fields([
-            {
-                  name: "files",
-                  maxCount: 10, // Adjust maxCount as needed
-            },
+            { name: "coverImage", maxCount: 1 }, // Single cover image
+            { name: "showcaseImages", maxCount: 10 }, // Up to 10 showcase images
+            { name: "additionalImages", maxCount: 10 }, // Up to 10 additional images
       ]),
       EditProject
 );
+
 
 // Route for deleting a project by ID
 router.route("/delete/:id").delete(deleteProjects);

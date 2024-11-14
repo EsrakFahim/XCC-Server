@@ -4,13 +4,13 @@ import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { Projects } from "../../models/Projects/Projects.model.js";
 
 const deleteProjects = asyncHandler(async (req, res, next) => {
-      const { _id } = req.params; // Get project ID from request params
+      const { id } = req.params; // Get project ID from request params
 
       try {
-            const project = await Projects.findOneAndDelete({ _id });
+            const project = await Projects.findOneAndDelete({ _id: id });
 
             if (!project) {
-                  throw new apiErrorHandler(res, 404, "Project not found");
+                  throw new apiErrorHandler(404, "Project not found");
             }
 
             return res
@@ -23,7 +23,7 @@ const deleteProjects = asyncHandler(async (req, res, next) => {
                         )
                   );
       } catch (error) {
-            throw new apiErrorHandler(res, 500, error.message);
+            throw new apiErrorHandler(500, error.message);
       }
 });
 
