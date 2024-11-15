@@ -4,10 +4,10 @@ import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
 
 const getSingleService = asyncHandler(async (req, res, next) => {
-      const { slug } = req.params; // Get service ID from request params
+      const { id } = req.params; // Get service ID from request params
 
       try {
-            const service = await OurServices.findOne({ slug });
+            const service = await OurServices.findOne({ _id: id });
 
             if (!service) {
                   throw new apiErrorHandler(res, 404, "Service not found");

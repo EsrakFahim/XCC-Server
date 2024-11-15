@@ -10,15 +10,20 @@ const validateFields = (fields) => {
 };
 
 export const CreateServices = asyncHandler(async (req, res) => {
-      // Extract data from the request
+      // Extract data from the request body
       const {
             title,
-            planning,
-            capabilities,
-            approach,
-            workProcess,
+            planningHeading,
+            planningDescription,
+            capabilitiesDescription,
+            approachHeading,
+            approachPoints,
+            workProcessStep,
+            workProcessDescription,
             relatedServices,
-            seo,
+            metaTitle,
+            metaDescription,
+            keywords,
             isActive,
       } = req.body;
 
@@ -27,58 +32,106 @@ export const CreateServices = asyncHandler(async (req, res) => {
       // Validate required fields
       const areFieldsValid = validateFields({
             title,
-            planning,
-            capabilities,
-            approach,
-            workProcess,
-            relatedServices,
-            seo,
+            planningHeading,
+            planningDescription,
+            capabilitiesDescription,
+            approachHeading,
+            workProcessStep,
+            workProcessDescription,
             coverImage,
             icon,
       });
 
-      if (!areFieldsValid || isActive === undefined) {
-            return apiErrorHandler(res, 400, "Please provide all required fields and images");
+      if (!areFieldsValid) {
+            throw new apiErrorHandler(400, "Please provide all required fields and images");
       }
 
       try {
-            // Check if service with the same title already exists
+            // Check if a service with the same title already exists
             const existingService = await OurServices.findOne({ title }).lean();
             if (existingService) {
-                  return apiErrorHandler(res, 400, "Service already exists");
+                  throw new apiErrorHandler(400, "Service already exists");
             }
 
-            // Use Promise.all for parallel uploads to Cloudinary
+            // Upload images to Cloudinary in parallel
             const [uploadedCoverImage, uploadedIcon] = await Promise.all([
                   uploadFileCloudinary(coverImage[0].path),
                   uploadFileCloudinary(icon[0].path),
             ]);
 
             if (!uploadedCoverImage || !uploadedIcon) {
-                  return apiErrorHandler(res, 500, "Error uploading images");
+                  throw new apiErrorHandler(500, "Error uploading images");
             }
+
+            // Prepare the uploaded images for the database
+            const coverImageUploadDB = {
+                  url: uploadedCoverImage.url,
+                  name: uploadedCoverImage.original_filename,
+                  altText: uploadedCoverImage.original_filename,
+            };
+
+            const iconUploadDB = {
+                  url: uploadedIcon.url,
+                  name: uploadedIcon.original_filename,
+                  altText: uploadedIcon.original_filename,
+            };
+
+            // Prepare embedded documents and arrays for MongoDB
+            const planning = {
+                  heading: planningHeading,
+                  description: planningDescription,
+            };
+
+            const capabilities = [
+                  {
+                        icon: iconUploadDB.url,
+                        description: capabilitiesDescription,
+                  },
+            ];
+
+            const approach = {
+                  heading: approachHeading,
+                  points: approachPoints ? approachPoints.split(",").map(point => point.trim()) : [],
+            };
+
+            const workProcess = [
+                  {
+                        step: workProcessStep,
+                        description: workProcessDescription,
+                  },
+            ];
+
+            const relatedServicesArray = relatedServices
+                  ? relatedServices.split(",").map((serviceId) => serviceId.trim())
+                  : [];
+
+            const seo = {
+                  metaTitle,
+                  metaDescription,
+                  keywords: keywords ? keywords.split(",").map((keyword) => keyword.trim()) : [],
+            };
 
             // Create the new service in the database
             const service = new OurServices({
                   title,
                   planning,
-                  capabilities: JSON.parse(capabilities),
+                  capabilities,
                   approach,
-                  workProcess: JSON.parse(workProcess),
-                  relatedServices: JSON.parse(relatedServices),
+                  workProcess,
                   seo,
+                  relatedServices: relatedServicesArray,
                   isActive: isActive || false,
-                  coverImage: uploadedCoverImage.url,
-                  icon: uploadedIcon.url,
+                  coverImage: coverImageUploadDB,
+                  icon: iconUploadDB,
             });
 
             await service.save();
 
             return res.status(201).json(
-                  new apiResponse(201, "Service created successfully", service)
+                  new apiResponse(201, service, "Service created successfully")
             );
       } catch (error) {
             console.error("CreateServices Error: ", error);
-            return apiErrorHandler(res, 500, "Server error, please try again later");
+            throw new apiErrorHandler(500, "Server error, please try again later");
       }
 });

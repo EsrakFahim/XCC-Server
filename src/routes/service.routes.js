@@ -15,7 +15,7 @@ router.route("/upload").post(
                   maxCount: 1,
             },
             {
-                  name: "showcaseImages",
+                  name: "icon",
                   maxCount: 1,
             },
       ]),
@@ -28,7 +28,7 @@ router.route("/update").put(
                   maxCount: 1,
             },
             {
-                  name: "showcaseImages",
+                  name: "icon",
                   maxCount: 1,
             },
       ]),
@@ -36,6 +36,6 @@ router.route("/update").put(
 );
 router.route("/delete").delete(DeleteService);
 router.route("/").get(GetAllServices);
-router.route("/:slug").get(getSingleService);
+router.route("/:id").get(getSingleService);
 
 export default router;
