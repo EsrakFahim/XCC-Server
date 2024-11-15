@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 
 const { Schema, model } = mongoose;
 
@@ -27,6 +28,7 @@ const relatedServiceSchema = new Schema(
 const OurServicesSchema = new Schema(
       {
             title: { type: String, required: true, unique: true, index: true },
+            slug: { type: String, unique: true, index: true, default: null }, // Added slug field
             coverImage: imageSchema,
             icon: imageSchema,
             planning: {
@@ -49,8 +51,7 @@ const OurServicesSchema = new Schema(
                         description: { type: String, required: true, maxlength: 300 },
                   },
             ],
-            // Use ObjectIds for better relation with existing services
-            relatedServices: [{ type: mongoose.Schema.Types.ObjectId, ref: 'OurServices' }],
+            relatedServices: [{ type: mongoose.Schema.Types.ObjectId, ref: "OurServices" }],
             seo: {
                   metaTitle: { type: String, required: true, maxlength: 70 },
                   metaDescription: { type: String, required: true, maxlength: 160 },
@@ -68,15 +69,24 @@ const OurServicesSchema = new Schema(
 OurServicesSchema.index({ title: "text", "seo.keywords": "text" });
 OurServicesSchema.index({ isActive: 1, title: 1 });
 
-// Pre-save hook for additional validations (Optional)
+// Pre-save hook for slug generation
 OurServicesSchema.pre("save", function (next) {
       // Capitalize the first letter of the title
       this.title = this.title.charAt(0).toUpperCase() + this.title.slice(1);
+
+      // Generate a slug from the title
+      if (!this.slug) {
+            this.slug = this.title
+                  .toLowerCase()
+                  .trim()
+                  .replace(/[^a-z0-9]+/g, "-")
+                  .replace(/^-+|-+$/g, "") || uuidv4(); // Use UUID as a fallback
+      }
       next();
 });
 
 // Adding TTL (Time-to-Live) index for temporary data (if needed)
-OurServicesSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }); // Auto-delete after 30 days (optional)
+// OurServicesSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }); // Auto-delete after 30 days (optional)
 
 const OurServices = model("OurServices", OurServicesSchema);
 

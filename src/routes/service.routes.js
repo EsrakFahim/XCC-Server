@@ -34,8 +34,8 @@ router.route("/update").put(
       ]),
       EditServices
 );
-router.route("/delete").delete(DeleteService);
+router.route("/delete/:slug").delete(DeleteService);
 router.route("/").get(GetAllServices);
-router.route("/:id").get(getSingleService);
+router.route("/:slug").get(getSingleService);
 
 export default router;

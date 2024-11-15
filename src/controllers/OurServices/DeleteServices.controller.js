@@ -3,36 +3,31 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
 
-const DeleteService = asyncHandler(async (req, res, next) => {
+const DeleteService = asyncHandler(async (req, res) => {
+      const { slug } = req.params;
+
+      // Check if slug is provided
+      if (!slug) {
+            throw new apiErrorHandler(400, "Service slug is required");
+      }
+
       try {
-            const _id = req.params.id;
-
-            // Check if service ID is provided
-            if (!_id) {
-                  throw new apiErrorHandler(res, 400, "Service ID is required");
-            }
-
-            // Check if the service with the given ID exists
-            const existingService = await OurServices.findById(_id);
+            // Check if the service with the given slug exists
+            const existingService = await OurServices.findOne({ slug });
 
             if (!existingService) {
-                  throw new apiErrorHandler(
-                        res,
-                        404,
-                        "Service not found or already deleted"
-                  );
+                  throw new apiErrorHandler(404, "Service not found or already deleted");
             }
 
             // Delete the service
-            await OurServices.findByIdAndDelete(_id);
+            await OurServices.findOneAndDelete({ slug });
 
             return res
                   .status(200)
-                  .json(
-                        new apiResponse(200, "Service deleted successfully", {})
-                  );
+                  .json(new apiResponse(200, {}, "Service deleted successfully"));
       } catch (error) {
-            throw new apiErrorHandler(res, 500, error.message);
+            console.error("DeleteService Error:", error);
+            throw new apiErrorHandler(500, "Server error, please try again later");
       }
 });
 

@@ -3,13 +3,23 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
+import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
 
 // Utility function for field validation
 const validateFields = (fields) => {
       return Object.values(fields).every((field) => field !== undefined && field !== null);
 };
 
-export const CreateServices = asyncHandler(async (req, res) => {
+// Utility function to generate a slug from the title
+const generateSlug = (title) => {
+      return title
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "") || uuidv4(); // Fallback to UUID if title is empty
+};
+
+const CreateServices = asyncHandler(async (req, res) => {
       // Extract data from the request body
       const {
             title,
@@ -53,6 +63,15 @@ export const CreateServices = asyncHandler(async (req, res) => {
                   throw new apiErrorHandler(400, "Service already exists");
             }
 
+            // Generate a slug
+            const slug = generateSlug(title);
+
+            // Check if the slug already exists
+            const existingSlug = await OurServices.findOne({ slug }).lean();
+            if (existingSlug) {
+                  throw new apiErrorHandler(400, "Slug already exists, try a different title");
+            }
+
             // Upload images to Cloudinary in parallel
             const [uploadedCoverImage, uploadedIcon] = await Promise.all([
                   uploadFileCloudinary(coverImage[0].path),
@@ -91,7 +110,7 @@ export const CreateServices = asyncHandler(async (req, res) => {
 
             const approach = {
                   heading: approachHeading,
-                  points: approachPoints ? approachPoints.split(",").map(point => point.trim()) : [],
+                  points: approachPoints ? approachPoints.split(",").map((point) => point.trim()) : [],
             };
 
             const workProcess = [
@@ -114,6 +133,7 @@ export const CreateServices = asyncHandler(async (req, res) => {
             // Create the new service in the database
             const service = new OurServices({
                   title,
+                  slug, // Include the generated slug
                   planning,
                   capabilities,
                   approach,
@@ -135,3 +155,6 @@ export const CreateServices = asyncHandler(async (req, res) => {
             throw new apiErrorHandler(500, "Server error, please try again later");
       }
 });
+
+
+export { CreateServices };
