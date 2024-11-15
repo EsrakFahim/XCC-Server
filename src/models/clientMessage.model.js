@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 
 const clientMessageSchema = new mongoose.Schema({
-      fullName: {
+      firstName: {
+            type: String,
+            required: [true, "Client name is required"],
+      },
+      lastName: {
             type: String,
             required: [true, "Client name is required"],
       },
@@ -13,11 +17,7 @@ const clientMessageSchema = new mongoose.Schema({
       message: {
             type: String,
       },
-      mobile: {
-            type: String,
-            default: "Not specified",
-      },
-      projectType: {
+      service: {
             type: String,
             default: "Not specified",
       },
