@@ -25,7 +25,7 @@ const clientMessage = asyncHandler(async (req, res, next) => {
                   lastName,
                   email,
                   message,
-                  projectType: projectType || "Not specified",
+                  service: service || "Not specified",
                   clientIP: clientIP || "Not specified",
             });
             console.log("New Message:", newMessage);
