@@ -21,9 +21,16 @@ const EditProject = asyncHandler(async (req, res) => {
             receivedGoals,
             isFeatured,
             isSliderActive,
-            testimonial,
-            seo,
       } = req.body;
+      
+      const seo = req.body.seo ? JSON.parse(req.body.seo) : null;
+      const testimonial = req.body.testimonial
+            ? JSON.parse(req.body.testimonial)
+            : null;
+
+      console.log("testimonial", testimonial);
+      console.log("seo", seo);
+      console.log("receivedGoals", receivedGoals);
 
       // Find the project by ID
       const existingProject = await Projects.findById(projectId);
