@@ -21,13 +21,19 @@ const CreateProject = asyncHandler(async (req, res) => {
             receivedGoals,
             isFeatured,
             isSliderActive,
-            testimonial,
-            seo,
       } = req.body;
+
+      const seo = req.body.seo ? JSON.parse(req.body.seo) : null;
+      const testimonial = req.body.testimonial
+            ? JSON.parse(req.body.testimonial)
+            : null;
 
       // Validate required fields
       if (!title || !description || !location || !projectType) {
-            throw new apiErrorHandler(400, "Please provide all required fields");
+            throw new apiErrorHandler(
+                  400,
+                  "Please provide all required fields"
+            );
       }
 
       // Check if a project with the same title already exists
@@ -44,17 +50,20 @@ const CreateProject = asyncHandler(async (req, res) => {
       if (req.files) {
             const { coverImage, showcaseImages, additionalImages } = req.files;
 
-
             // Upload cover image
             if (coverImage && coverImage[0]) {
-                  const uploadedCover = await uploadFileCloudinary(coverImage[0].path);
+                  const uploadedCover = await uploadFileCloudinary(
+                        coverImage[0].path
+                  );
                   coverImageUrl = uploadedCover?.url || null;
             }
 
             // Upload showcase images
             if (showcaseImages && showcaseImages.length > 0) {
                   for (const file of showcaseImages) {
-                        const uploadedFile = await uploadFileCloudinary(file.path);
+                        const uploadedFile = await uploadFileCloudinary(
+                              file.path
+                        );
                         console.log("uploadedFile", uploadedFile);
                         if (uploadedFile) {
                               showcaseImageUrls.push({
@@ -68,8 +77,13 @@ const CreateProject = asyncHandler(async (req, res) => {
             // Upload additional images
             if (additionalImages && additionalImages.length > 0) {
                   for (const file of additionalImages) {
-                        const uploadedFile = await uploadFileCloudinary(file.path);
-                        console.log("uploadedFile from additionalImages", uploadedFile);
+                        const uploadedFile = await uploadFileCloudinary(
+                              file.path
+                        );
+                        console.log(
+                              "uploadedFile from additionalImages",
+                              uploadedFile
+                        );
                         if (uploadedFile) {
                               additionalImageUrls.push({
                                     url: uploadedFile.url,
@@ -111,7 +125,15 @@ const CreateProject = asyncHandler(async (req, res) => {
       }
 
       // Send a success response
-      return res.status(201).json(new apiResponse(201, newProject, "Project created successfully"));
+      return res
+            .status(201)
+            .json(
+                  new apiResponse(
+                        201,
+                        newProject,
+                        "Project created successfully"
+                  )
+            );
 });
 
 export { CreateProject };
