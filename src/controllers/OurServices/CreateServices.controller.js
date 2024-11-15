@@ -4,95 +4,81 @@ import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
 
-const CreateServices = asyncHandler(async (req, res, next) => {
+// Utility function for field validation
+const validateFields = (fields) => {
+      return Object.values(fields).every((field) => field !== undefined && field !== null);
+};
+
+export const CreateServices = asyncHandler(async (req, res) => {
+      // Extract data from the request
+      const {
+            title,
+            planning,
+            capabilities,
+            approach,
+            workProcess,
+            relatedServices,
+            seo,
+            isActive,
+      } = req.body;
+
+      const { coverImage, icon } = req.files;
+
+      // Validate required fields
+      const areFieldsValid = validateFields({
+            title,
+            planning,
+            capabilities,
+            approach,
+            workProcess,
+            relatedServices,
+            seo,
+            coverImage,
+            icon,
+      });
+
+      if (!areFieldsValid || isActive === undefined) {
+            return apiErrorHandler(res, 400, "Please provide all required fields and images");
+      }
+
       try {
-            // Get all services
-            const {
-                  title,
-                  subtitle,
-                  description,
-                  serviceType,
-                  status,
-                  includingServices,
-                  isFeatured,
-            } = req.body;
-
-            // Get all images
-            const { coverImage, showcaseImages } = req.files;
-
-            // Check if required fields are provided
-            if (
-                  !title ||
-                  !subtitle ||
-                  !description ||
-                  !serviceType ||
-                  !status ||
-                  !includingServices ||
-                  isFeatured === undefined
-            ) {
-                  throw new apiErrorHandler(
-                        res,
-                        400,
-                        "Please provide all required fields"
-                  );
-            }
-
-            // Check if required images are provided
-            if (!coverImage || !showcaseImages) {
-                  throw new apiErrorHandler(
-                        res,
-                        400,
-                        "Please provide all required images"
-                  );
-            }
-
             // Check if service with the same title already exists
-            const existingService = await OurServices.findOne({ title });
+            const existingService = await OurServices.findOne({ title }).lean();
             if (existingService) {
-                  throw new apiErrorHandler(res, 400, "Service already exists");
+                  return apiErrorHandler(res, 400, "Service already exists");
             }
 
-            // Upload images to Cloudinary
-            const uploadedCoverImage = await uploadFileCloudinary(
-                  coverImage[0].path
-            );
-            const uploadedShowcaseImages = await uploadFileCloudinary(
-                  showcaseImages[0].path
-            );
+            // Use Promise.all for parallel uploads to Cloudinary
+            const [uploadedCoverImage, uploadedIcon] = await Promise.all([
+                  uploadFileCloudinary(coverImage[0].path),
+                  uploadFileCloudinary(icon[0].path),
+            ]);
 
-            if (!uploadedCoverImage || !uploadedShowcaseImages) {
-                  throw new apiErrorHandler(res, 500, "Error uploading images");
+            if (!uploadedCoverImage || !uploadedIcon) {
+                  return apiErrorHandler(res, 500, "Error uploading images");
             }
 
-            // Create the new service
-            const service = await OurServices.create({
+            // Create the new service in the database
+            const service = new OurServices({
                   title,
-                  subtitle,
-                  description,
+                  planning,
+                  capabilities: JSON.parse(capabilities),
+                  approach,
+                  workProcess: JSON.parse(workProcess),
+                  relatedServices: JSON.parse(relatedServices),
+                  seo,
+                  isActive: isActive || false,
                   coverImage: uploadedCoverImage.url,
-                  showcaseImages: uploadedShowcaseImages.url,
-                  serviceType,
-                  status,
-                  includingServices,
-                  isFeatured,
+                  icon: uploadedIcon.url,
             });
 
-            if (!service) {
-                  throw new apiErrorHandler(res, 500, "Error creating service");
-            }
+            await service.save();
 
-            return res
-                  .status(201)
-                  .json(
-                        new apiResponse(
-                              201,
-                              "Service created successfully",
-                              service
-                        )
-                  );
+            return res.status(201).json(
+                  new apiResponse(201, "Service created successfully", service)
+            );
       } catch (error) {
-            throw new apiErrorHandler(res, 500, "Server error");
+            console.error("CreateServices Error: ", error);
+            return apiErrorHandler(res, 500, "Server error, please try again later");
       }
 });
-
-export { CreateServices };

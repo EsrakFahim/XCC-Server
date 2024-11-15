@@ -1,108 +1,83 @@
-import mongoose, { Schema } from "mongoose";
-import slugify from "slugify"; // Assume slugify for generating SEO-friendly slugs
+import mongoose from "mongoose";
 
-const ourServicesSchema = new Schema(
+const { Schema, model } = mongoose;
+
+// Image schema to store Cloudinary details
+const imageSchema = new Schema(
       {
-            title: {
-                  type: String,
-                  required: [true, "Service title is required"],
-                  trim: true,
-                  maxlength: 100,
-                  index: true, // Indexed for faster queries
+            url: { type: String, required: true },
+            name: { type: String },
+            altText: { type: String, maxlength: 150 },
+      },
+      { _id: false } // Disable _id for sub-documents to reduce document size
+);
+
+// Schema for related services
+const relatedServiceSchema = new Schema(
+      {
+            title: { type: String, required: true, index: true },
+            description: { type: String, required: true, maxlength: 250 },
+            image: imageSchema,
+            link: { type: String, match: /^https?:\/\// }, // Ensure valid URLs
+      },
+      { _id: false }
+);
+
+// Main schema for project details
+const OurServicesSchema = new Schema(
+      {
+            title: { type: String, required: true, unique: true, index: true },
+            coverImage: imageSchema,
+            icon: imageSchema,
+            planning: {
+                  heading: { type: String, required: true, maxlength: 100 },
+                  description: { type: String, required: true, maxlength: 500 },
             },
-            slug: {
-                  type: String,
-                  unique: true,
-                  required: true,
-                  index: true, // SEO-friendly unique identifier
-            },
-            subTitle: {
-                  type: String,
-                  required: [true, "Sub-title is required"],
-                  trim: true,
-                  maxlength: 100,
-            },
-            description: {
-                  type: String,
-                  required: [true, "Description is required"],
-                  maxlength: 500,
-            },
-            coverImage: {
-                  type: String,
-                  required: [true, "Cover image is required"],
-                  match: [
-                        /^https?:\/\/[^\s]+$/,
-                        "Invalid URL format for cover image",
-                  ],
-            },
-            showcaseImages: {
-                  type: [String],
-                  default: [],
-                  validate: {
-                        validator: (arr) => arr.length <= 5,
-                        message: "Showcase images cannot exceed 5 items",
+            capabilities: [
+                  {
+                        icon: { type: String }, // Consider using enums if icons are limited
+                        description: { type: String, required: true, maxlength: 150 },
                   },
+            ],
+            approach: {
+                  heading: { type: String, required: true, maxlength: 100 },
+                  points: [{ type: String, maxlength: 150 }], // Limit points length
             },
-            serviceType: {
-                  type: String,
-                  enum: [
-                        "Development",
-                        "Design",
-                        "Marketing",
-                        "Consulting",
-                        "Other",
-                  ],
-                  required: true,
-                  index: true, // Index for optimized searches by service type
-            },
-            status: {
-                  type: String,
-                  enum: ["Active", "Inactive"],
-                  default: "Active",
-                  required: true,
-            },
-            includingServices: {
-                  type: [String],
-                  default: [],
-                  validate: {
-                        validator: (arr) => arr.length <= 10,
-                        message: "Including services cannot exceed 10 items",
+            workProcess: [
+                  {
+                        step: { type: String, required: true, maxlength: 100 },
+                        description: { type: String, required: true, maxlength: 300 },
                   },
+            ],
+            // Use ObjectIds for better relation with existing services
+            relatedServices: [{ type: mongoose.Schema.Types.ObjectId, ref: 'OurServices' }],
+            seo: {
+                  metaTitle: { type: String, required: true, maxlength: 70 },
+                  metaDescription: { type: String, required: true, maxlength: 160 },
+                  keywords: [{ type: String, index: true }],
             },
-            isFeatured: {
-                  type: Boolean,
-                  default: false,
-                  index: true, // Featured flag for quick featured queries
-            },
-            views: {
-                  type: Number,
-                  default: 0,
-                  min: 0,
-            },
-            publishedAt: {
-                  type: Date,
-                  default: null,
-            },
-            lastEditedAt: {
-                  type: Date,
-                  default: Date.now,
-            },
+            isActive: { type: Boolean, default: true },
       },
       {
-            timestamps: true,
-            toJSON: { virtuals: true },
-            toObject: { virtuals: true },
+            timestamps: true, // Automatically create `createdAt` and `updatedAt` fields
+            versionKey: false, // Disable the `__v` field for cleaner documents
       }
 );
 
-// Pre-save hook to create slug
-ourServicesSchema.pre("save", function (next) {
-      if (!this.slug) {
-            this.slug = slugify(this.title, { lower: true, strict: true });
-      }
+// Compound Indexes for better search performance
+OurServicesSchema.index({ title: "text", "seo.keywords": "text" });
+OurServicesSchema.index({ isActive: 1, title: 1 });
+
+// Pre-save hook for additional validations (Optional)
+OurServicesSchema.pre("save", function (next) {
+      // Capitalize the first letter of the title
+      this.title = this.title.charAt(0).toUpperCase() + this.title.slice(1);
       next();
 });
 
-const OurServices = mongoose.model("OurServices", ourServicesSchema);
+// Adding TTL (Time-to-Live) index for temporary data (if needed)
+OurServicesSchema.index({ createdAt: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 }); // Auto-delete after 30 days (optional)
+
+const OurServices = model("OurServices", OurServicesSchema);
 
 export { OurServices };
