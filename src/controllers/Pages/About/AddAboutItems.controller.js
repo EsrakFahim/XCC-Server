@@ -14,7 +14,6 @@ const addAboutItems = asyncHandler(async (req, res) => {
             return res.status(400).json(new apiResponse(400, null, "All fields are required."));
       }
 
-      
       try {
             // Optimize Cloudinary upload
             const uploadedFile = await uploadFileCloudinary(image[0].path);
