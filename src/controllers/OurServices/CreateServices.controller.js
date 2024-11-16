@@ -28,7 +28,6 @@ const CreateServices = asyncHandler(async (req, res) => {
             capabilitiesDescription,
             approachHeading,
             approachPoints,
-            workProcessStep,
             workProcessDescription,
             relatedServices,
             metaTitle,
@@ -46,7 +45,6 @@ const CreateServices = asyncHandler(async (req, res) => {
             planningDescription,
             capabilitiesDescription,
             approachHeading,
-            workProcessStep,
             workProcessDescription,
             coverImage,
             icon,
@@ -108,21 +106,26 @@ const CreateServices = asyncHandler(async (req, res) => {
                   },
             ];
 
+
             const approach = {
                   heading: approachHeading,
                   points: approachPoints ? approachPoints.split(",").map((point) => point.trim()) : [],
             };
 
-            const workProcess = [
-                  {
-                        step: workProcessStep,
-                        description: workProcessDescription,
-                  },
-            ];
+            const workProcess = workProcessDescription.split(",").map((des, index) => {
+                  return {
+                        step: `Step ${++index}`,
+                        description: des.trim(),
+                  };
+            });
+
+            console.log("relatedServices: ", relatedServices);
 
             const relatedServicesArray = relatedServices
                   ? relatedServices.split(",").map((serviceId) => serviceId.trim())
                   : [];
+
+            console.log("relatedServicesArray: ", relatedServicesArray);
 
             const seo = {
                   metaTitle,
