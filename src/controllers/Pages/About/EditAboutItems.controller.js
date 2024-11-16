@@ -9,13 +9,11 @@ const editAboutItems = asyncHandler(async (req, res) => {
       const {
             title,
             description,
-            whyWeTitle,
-            whyWeDescription,
-            benefits,
+            whyUsTitle,
             isActive,
       } = req.body;
 
-      const { whyWeImage, images } = req.files;
+      const { image } = req.files;
 
       try {
             // Find the existing About entry
@@ -28,43 +26,24 @@ const editAboutItems = asyncHandler(async (req, res) => {
             existingAbout.title = title || existingAbout.title;
             existingAbout.description =
                   description || existingAbout.description;
-            existingAbout.whyWeTitle = whyWeTitle || existingAbout.whyWeTitle;
-            existingAbout.whyWeDescription =
-                  whyWeDescription || existingAbout.whyWeDescription;
+            existingAbout.whyUsTitle = whyUsTitle || existingAbout.whyUsTitle;
 
             // Process images array only if new images are provided
-            if (images && images.length > 0) {
+            if (image && image.length > 0) {
                   const uploadedFiles = [];
-                  for (const image of images) {
-                        const uploadedFile = await uploadFileCloudinary(
-                              image[0].path
-                        );
-                        if (uploadedFile) {
-                              uploadedFiles.push({
-                                    imageUrl: uploadedFile.url,
-                                    altText: image.originalname,
-                              });
-                        }
+                  const uploadedFile = await uploadFileCloudinary(
+                        image[0].path
+                  );
+                  if (uploadedFile) {
+                        uploadedFiles.push({
+                              imageUrl: uploadedFile.url,
+                              altText: image.originalname,
+                        });
                   }
-                  existingAbout.images =
+                  existingAbout.image =
                         uploadedFiles.length > 0
                               ? uploadedFiles
-                              : existingAbout.images;
-            }
-
-            // Upload a new whyWeImage if provided
-            if (whyWeImage) {
-                  const uploadedWhyWeImage = await uploadFileCloudinary(
-                        whyWeImage[0].path
-                  );
-                  existingAbout.whyWeImage =
-                        uploadedWhyWeImage.secure_url ||
-                        existingAbout.whyWeImage;
-            }
-
-            // Update benefits array only if new benefits are provided
-            if (benefits) {
-                  existingAbout.benefits = benefits;
+                              : existingAbout.image;
             }
 
             // Update isActive field if provided
@@ -72,7 +51,11 @@ const editAboutItems = asyncHandler(async (req, res) => {
                   isActive !== undefined ? isActive : existingAbout.isActive;
 
             // Save the updated About entry
-            const updatedAbout = await existingAbout.save();
+            const updatedAbout = await existingAbout.save(
+                  {
+                        validateBeforeSave: false,
+                  }
+            );
 
             // Send success response
             return res

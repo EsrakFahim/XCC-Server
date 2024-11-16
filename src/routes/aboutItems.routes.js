@@ -10,8 +10,8 @@ const router = Router();
 router.route("/").post(
       upload.fields([
             {
-                  name: "images",
-                  maxCount: 10, // Adjust maxCount as needed
+                  name: "image",
+                  maxCount: 2, // Adjust maxCount as needed
             },
       ]),
       addAboutItems
