@@ -8,6 +8,7 @@ import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 const addTeamMember = asyncHandler(async (req, res) => {
       const {
             name,
+            
             position,
             experience,
             address,
