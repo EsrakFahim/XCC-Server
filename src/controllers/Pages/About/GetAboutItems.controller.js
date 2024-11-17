@@ -18,7 +18,7 @@ const getAboutItems = asyncHandler(async (req, res) => {
             // Send success response
             return res
                   .status(200)
-                  .json(new apiResponse(200, aboutItems, "Success"));
+                  .json(new apiResponse(200, aboutItems[0], "Success"));
       } catch (error) {
             throw new apiErrorHandler(500, error.message);
       }
