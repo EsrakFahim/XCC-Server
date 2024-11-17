@@ -3,21 +3,14 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
-import { v4 as uuidv4 } from "uuid"; // For generating unique IDs
+import generateSlug from "../../utils/generateSlug.js";
+
 
 // Utility function for field validation
 const validateFields = (fields) => {
       return Object.values(fields).every((field) => field !== undefined && field !== null);
 };
 
-// Utility function to generate a slug from the title
-const generateSlug = (title) => {
-      return title
-            .toLowerCase()
-            .trim()
-            .replace(/[^a-z0-9]+/g, "-")
-            .replace(/^-+|-+$/g, "") || uuidv4(); // Fallback to UUID if title is empty
-};
 
 const CreateServices = asyncHandler(async (req, res) => {
       // Extract data from the request body
@@ -28,7 +21,6 @@ const CreateServices = asyncHandler(async (req, res) => {
             capabilitiesDescription,
             approachHeading,
             approachPoints,
-            workProcessStep,
             workProcessDescription,
             relatedServices,
             metaTitle,
@@ -46,7 +38,6 @@ const CreateServices = asyncHandler(async (req, res) => {
             planningDescription,
             capabilitiesDescription,
             approachHeading,
-            workProcessStep,
             workProcessDescription,
             coverImage,
             icon,
@@ -108,21 +99,26 @@ const CreateServices = asyncHandler(async (req, res) => {
                   },
             ];
 
+
             const approach = {
                   heading: approachHeading,
                   points: approachPoints ? approachPoints.split(",").map((point) => point.trim()) : [],
             };
 
-            const workProcess = [
-                  {
-                        step: workProcessStep,
-                        description: workProcessDescription,
-                  },
-            ];
+            const workProcess = workProcessDescription.split(",").map((des, index) => {
+                  return {
+                        step: `Step ${++index}`,
+                        description: des.trim(),
+                  };
+            });
+
+            console.log("relatedServices: ", relatedServices);
 
             const relatedServicesArray = relatedServices
                   ? relatedServices.split(",").map((serviceId) => serviceId.trim())
                   : [];
+
+            console.log("relatedServicesArray: ", relatedServicesArray);
 
             const seo = {
                   metaTitle,

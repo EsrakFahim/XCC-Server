@@ -7,7 +7,7 @@ const getSingleService = asyncHandler(async (req, res, next) => {
       const { slug } = req.params; // Get service ID from request params
 
       try {
-            const service = await OurServices.findOne({ slug });
+            const service = await OurServices.findById(slug);
 
             if (!service) {
                   throw new apiErrorHandler(404, "Service not found");

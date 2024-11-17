@@ -3,6 +3,7 @@ import { apiResponse } from "../../utils/apiResponse.js";
 import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 import { OurServices } from "../../models/OurServices/OurServices.model.js";
+import generateSlug from "../../utils/generateSlug.js";
 
 
 const EditServices = asyncHandler(async (req, res) => {
@@ -41,7 +42,11 @@ const EditServices = asyncHandler(async (req, res) => {
                         throw new apiErrorHandler(400, "Service with the new title already exists");
                   }
                   service.title = title;
+                  // generate a new slug
+                  service.slug = generateSlug(title);
             }
+
+
 
             // Upload new images to Cloudinary if provided
             if (coverImage) {
@@ -94,13 +99,15 @@ const EditServices = asyncHandler(async (req, res) => {
                   };
             }
 
-            if (workProcessStep || workProcessDescription) {
-                  service.workProcess = [
-                        {
-                              step: workProcessStep || service.workProcess[0]?.step,
-                              description: workProcessDescription || service.workProcess[0]?.description,
-                        },
-                  ];
+            if (workProcessDescription) {
+                  service. workProcess = workProcessDescription
+                  .split(",")
+                  .map((des, index) => {
+                        return {
+                              step: `Step ${++index}`,
+                              description: des.trim(),
+                        };
+                  });
             }
 
             if (relatedServices) {
@@ -123,6 +130,8 @@ const EditServices = asyncHandler(async (req, res) => {
             if (isActive !== undefined) {
                   service.isActive = isActive;
             }
+
+            
 
             await service.save(
                   {
