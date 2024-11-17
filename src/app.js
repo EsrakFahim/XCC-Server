@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import helmet from "helmet";
 import compression from "compression";
 import rateLimit from "express-rate-limit";
+import morgan from "morgan";
 
 dotenv.config(); // Load environment variables
 
@@ -38,6 +39,7 @@ const limiter = rateLimit({
 });
 
 // Middleware setup
+app.use(morgan("dev")); // Log HTTP requests in the console
 app.use(express.static("public", { maxAge: "1d" })); // Cache static assets for 1 day
 app.use(cors(corsOptions));
 app.use(helmet({

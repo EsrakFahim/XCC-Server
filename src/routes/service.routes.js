@@ -21,7 +21,7 @@ router.route("/upload").post(
       ]),
       CreateServices
 );
-router.route("/update").put(
+router.route("/update/:id").put(
       upload.fields([
             {
                   name: "coverImage",
