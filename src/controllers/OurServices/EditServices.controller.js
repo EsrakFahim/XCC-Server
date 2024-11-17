@@ -139,8 +139,6 @@ const EditServices = asyncHandler(async (req, res) => {
                   }
             );
 
-            console.log("Service: ", service);
-
             return res.status(200).json(
                   new apiResponse(200, service, "Service updated successfully")
             );
