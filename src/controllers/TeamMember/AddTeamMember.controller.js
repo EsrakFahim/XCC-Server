@@ -15,8 +15,6 @@ const addTeamMember = asyncHandler(async (req, res) => {
             phone,
             email,
             personalExperience,
-            statistics,
-            education,
             languages,
       } = req.body;
 
@@ -28,6 +26,11 @@ const addTeamMember = asyncHandler(async (req, res) => {
       if (!name || !position || !experience || !email || !avatar) {
             return res.status(400).json(new apiResponse(400, null, "All fields are required."));
       }
+
+      // parse education field
+      const education = req.body.education ? JSON.parse(req.body.education) : null;
+      // parse statistics field
+      const statistics = req.body.statistics ? JSON.parse(req.body.statistics) : null;
 
       try {
             // Optimize image upload (upload only if profileImage exists)
