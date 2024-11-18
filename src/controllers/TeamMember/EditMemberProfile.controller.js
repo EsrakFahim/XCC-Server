@@ -4,73 +4,112 @@ import { apiErrorHandler } from "../../utils/apiErrorHandler.js";
 import { TeamMember } from "../../models/TeamMember/TeamMember.model.js";
 import { uploadFileCloudinary } from "../../FileHandler/Upload.js";
 
-const editMemberProfile = asyncHandler(async (req, res) => {
-      const { _id } = req.params;
-      const { fullName, jobTitle, bio, description, socialLinks, experience } =
-            req.body;
+// Controller to edit an existing team member
+const editTeamMember = asyncHandler(async (req, res) => {
+      const { memberId } = req.params;
+
+      const {
+            name,
+            position,
+            experience,
+            address,
+            phone,
+            email,
+            personalExperience,
+            languages,
+      } = req.body;
+
+      // parse education and statistics fields
+      const education = req.body.education
+            ? JSON.parse(req.body.education)
+            : null;
+      const statistics = req.body.statistics
+            ? JSON.parse(req.body.statistics)
+            : null;
+
       const { avatar } = req.files;
 
+      console.log("Request body:", req.body);
+
       try {
-            if (!_id) {
-                  throw new apiErrorHandler(
-                        res,
-                        400,
-                        "Team member ID is required"
-                  );
+            // Find the team member by ID
+            const existingMember = await TeamMember.findById(memberId);
+            if (!existingMember) {
+                  return res
+                        .status(404)
+                        .json(new apiResponse(404, null, "Member not found."));
             }
 
-            const existingTeamMember = await TeamMember.findById(_id);
-
-            if (!existingTeamMember) {
-                  throw new apiErrorHandler(res, 404, "Team member not found");
-            }
-
-            const updates = {};
-
-            if (fullName) updates.fullName = fullName;
-            if (jobTitle) updates.jobTitle = jobTitle;
-            if (bio) updates.bio = bio;
-            if (description) updates.description = description;
-            if (socialLinks) updates.socialLinks = socialLinks;
-            if (experience) updates.experience = experience;
-
+            // Optimize image upload (upload only if avatar exists)
+            let updatedProfileImage = existingMember.profileImage;
             if (avatar) {
-                  const avatarUrl = await uploadFileCloudinary(avatar[0].path);
-                  if (avatarUrl) {
-                        updates.avatar = avatarUrl.url;
+                  const uploadedProfileImage = await uploadFileCloudinary(
+                        avatar[0]?.path
+                  );
+                  if (!uploadedProfileImage) {
+                        throw new apiErrorHandler(
+                              400,
+                              "Failed to upload profile image"
+                        );
                   }
+                  updatedProfileImage = {
+                        imageUrl: uploadedProfileImage.secure_url,
+                        altText: name || existingMember.name,
+                  };
             }
 
-            const updatedTeamMember = await TeamMember.findByIdAndUpdate(
-                  _id,
+            // Update the member document
+            const updatedMember = await TeamMember.findByIdAndUpdate(
+                  memberId,
                   {
-                        $set: updates,
+                        name: name || existingMember.name,
+                        position: position || existingMember.position,
+                        experience: experience || existingMember.experience,
+                        address: address || existingMember.address,
+                        phone: phone || existingMember.phone,
+                        email: email || existingMember.email,
+                        profileImage: updatedProfileImage,
+                        personalExperience:
+                              personalExperience ||
+                              existingMember.personalExperience,
+                        statistics: {
+                              clientSatisfaction:
+                                    statistics?.clientSatisfaction ??
+                                    existingMember.statistics
+                                          .clientSatisfaction,
+                              happyClients:
+                                    statistics?.happyClients ??
+                                    existingMember.statistics.happyClients,
+                              projectsDone:
+                                    statistics?.projectsDone ??
+                                    existingMember.statistics.projectsDone,
+                              successRate:
+                                    statistics?.successRate ??
+                                    existingMember.statistics.successRate,
+                        },
+                        education: education || existingMember.education,
+                        languages: languages || existingMember.languages,
                   },
-                  {
-                        new: true,
-                        validateBeforeSave: true,
-                  }
+                  { new: true } // Return the updated document
             );
 
-            // Check if the team member was updated successfully
-            if (!updatedTeamMember)
-                  throw new apiErrorHandler(
-                        500,
-                        "Failed to update team member"
-                  );
+            console.log("Member updated:", updatedMember);
 
             return res
                   .status(200)
                   .json(
                         new apiResponse(
                               200,
-                              updatedTeamMember,
-                              "Team member updated successfully"
+                              updatedMember,
+                              "Member updated successfully."
                         )
                   );
       } catch (error) {
-            throw new apiErrorHandler(500, error.message);
+            console.error("Error updating member:", error.message);
+            return res
+                  .status(500)
+                  .json(new apiResponse(500, null, "Server error"));
       }
 });
 
-export { editMemberProfile };
+export { editTeamMember };

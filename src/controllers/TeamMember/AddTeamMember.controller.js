@@ -18,6 +18,11 @@ const addTeamMember = asyncHandler(async (req, res) => {
             languages,
       } = req.body;
 
+      // parse education field
+      const education = req.body.education ? JSON.parse(req.body.education) : null;
+      // parse statistics field
+      const statistics = req.body.statistics ? JSON.parse(req.body.statistics) : null;
+      
       const { avatar } = req.files;
 
       console.log("Request body:", req.body);
@@ -27,10 +32,6 @@ const addTeamMember = asyncHandler(async (req, res) => {
             return res.status(400).json(new apiResponse(400, null, "All fields are required."));
       }
 
-      // parse education field
-      const education = req.body.education ? JSON.parse(req.body.education) : null;
-      // parse statistics field
-      const statistics = req.body.statistics ? JSON.parse(req.body.statistics) : null;
 
       try {
             // Optimize image upload (upload only if profileImage exists)

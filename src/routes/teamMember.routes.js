@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { addTeamMember } from "../controllers/TeamMember/AddTeamMember.controller.js";
-import { editMemberProfile } from "../controllers/TeamMember/EditMemberProfile.controller.js";
+import { editTeamMember } from "../controllers/TeamMember/EditMemberProfile.controller.js";
 import { removeTeamMember } from "../controllers/TeamMember/RemoveTeamMember.controller.js";
 import { getAllTeamMember } from "../controllers/TeamMember/GetAllTeamMember.controller.js";
 import { getSingleTeamMember } from "../controllers/TeamMember/GetSingleTeamMember.controller.js";
@@ -18,17 +18,17 @@ router.route("/add").post(
       addTeamMember
 );
 
-router.route("/update").put(
+router.route("/update/:memberId").put(
       upload.fields([
             {
                   name: "avatar",
                   maxCount: 1,
             },
       ]),
-      editMemberProfile
+      editTeamMember
 );
 
-router.route("/delete").delete(removeTeamMember);
+router.route("/delete/:_id").delete(removeTeamMember);
 router.route("/").get(getAllTeamMember);
 router.route("/:id").get(getSingleTeamMember);
 
