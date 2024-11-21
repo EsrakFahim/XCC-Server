@@ -16,7 +16,7 @@ const allowedOrigins = [
       "http://localhost:5173",
       "http://localhost:3036",
       "https://xcc-dashboard.vercel.app",
-      "https://xcclive.vercel.app/"
+      "https://xcclive.vercel.app"
 ];
 
 const corsOptions = {
