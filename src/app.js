@@ -15,8 +15,10 @@ const app = express();
 // CORS configuration
 const isProduction = "production" === "production";
 const allowedOrigins = isProduction
-      ? ["https://xcc-dashboard-v11.vercel.app", "https://www.xavironconstructioncorp.com"]
+      ? ["https://xcc-dashboard-v11.vercel.app", "https://www.xavironconstructioncorp.com", "https://www.xavironconstructioncorp.com/admin"]
       : ["http://localhost:5173", "http://localhost:3036"];
+
+console.log(allowedOrigins);
 
 const corsOptions = {
       origin: (origin, callback) => {
