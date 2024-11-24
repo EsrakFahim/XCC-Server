@@ -14,6 +14,8 @@ const app = express();
 // CORS configuration
 const allowedOrigins = [
       "https://xcc-dashboard.vercel.app",
+      "https://xavironconstructioncorp.com",
+      "https://www.xavironconstructioncorp.com"
 ];
 
 const corsOptions = {
