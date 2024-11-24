@@ -7,17 +7,16 @@ import compression from "compression";
 import rateLimit from "express-rate-limit";
 import morgan from "morgan";
 
-dotenv.config(); // Load environment variables
+// Load environment variables
+dotenv.config();
 
 const app = express();
 
 // CORS configuration
-const allowedOrigins = [
-      "http://localhost:5173",
-      "http://localhost:3036",
-      'https://xcc-dashboard-v11.vercel.app',
-      "https://www.xavironconstructioncorp.com",
-];
+const isProduction = process.env.NODE_ENV === "production";
+const allowedOrigins = isProduction
+      ? ["https://xcc-dashboard-v11.vercel.app", "https://www.xavironconstructioncorp.com"]
+      : ["http://localhost:5173", "http://localhost:3036"];
 
 const corsOptions = {
       origin: (origin, callback) => {
@@ -27,31 +26,33 @@ const corsOptions = {
                   callback(new Error("Not allowed by CORS"));
             }
       },
-      credentials: true, // Allow cookies to be sent
+      credentials: true, // Allow cookies
       optionsSuccessStatus: 200,
 };
 
-// Rate Limiting: Limit each IP to 100 requests per windowMs (15 minutes)
+// Middleware setup
+app.use(morgan("dev")); // Log HTTP requests
+app.use(express.static("public", { maxAge: "1d" })); // Serve static assets
+app.use(cors(corsOptions));
+app.use(
+      helmet({
+            contentSecurityPolicy: false, // Allow inline scripts/styles if needed
+      })
+);
+app.use(compression()); // Compress responses
+app.use(cookieParser());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+// Rate Limiting
 const limiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
-      max: 100, // Limit each IP to 100 requests per windowMs
+      max: 100, // Limit each IP
       message: {
             message: "Too many requests from this IP, please try again after 15 minutes",
       },
 });
-
-// Middleware setup
-app.use(morgan("dev")); // Log HTTP requests in the console
-app.use(express.static("public", { maxAge: "1d" })); // Cache static assets for 1 day
-app.use(cors(corsOptions));
-app.use(helmet({
-      contentSecurityPolicy: false, // Disable if using inline scripts/styles
-}));
-app.use(compression()); // Compress all HTTP responses
-app.use(cookieParser());
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-app.use(limiter); // Apply rate limiting
+app.use(limiter);
 
 // Routes import
 import clientRouter from "./routes/client.routes.js";
@@ -75,22 +76,23 @@ app.use("/api/v1/agency-stats", agencyStatsRoute);
 app.use("/api/v1/home-page", homePageRoute);
 app.use("/api/v1/about-page", aboutPageRoute);
 
-// Global Error Handling Middleware
-app.use((err, req, res, next) => {
-      console.error("❌ Error:", err.stack);
-      res.status(err.status || 500).json({
-            success: false,
-            message: err.message || "Internal Server Error",
-      });
-});
-
 // 404 Handler
-app.use((req, res) => {
+app.all("*", (req, res) => {
       res.status(404).json({
             success: false,
             message: "Route Not Found",
       });
 });
 
-// Export the app
-export { app };
+// Global Error Handling Middleware
+app.use((err, req, res, next) => {
+      console.error("❌ Error:", err.stack);
+      res.status(err.status || 500).json({
+            success: false,
+            message: err.message || "Internal Server Error",
+            stack: process.env.NODE_ENV === "development" ? err.stack : undefined,
+      });
+});
+
+// Export the app for Vercel
+export default app;
