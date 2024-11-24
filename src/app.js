@@ -15,8 +15,8 @@ const app = express();
 const allowedOrigins = [
       "http://localhost:5173",
       "http://localhost:3036",
-      "https://xcc-dashboard.vercel.app",
-      "https://www.xavironconstructioncorp.com"
+      'https://xcc-dashboard-v11.vercel.app/',
+      "https://www.xavironconstructioncorp.com",
 ];
 
 const corsOptions = {
