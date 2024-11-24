@@ -16,7 +16,8 @@ const allowedOrigins = [
       "https://xcc-dashboard.vercel.app",
       "https://xavironconstructioncorp.com",
       "https://www.xavironconstructioncorp.com",
-      "http://localhost:3036"
+      "http://localhost:3036",
+      "http://localhost:5173",
 ];
 
 console.log("Allowed origins:", allowedOrigins);
