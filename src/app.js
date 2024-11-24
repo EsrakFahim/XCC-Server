@@ -36,6 +36,9 @@ const corsOptions = {
       optionsSuccessStatus: 200, // For legacy browser support
 };
 
+app.set('trust proxy', 1); // Trust first proxy (e.g., Vercel or other reverse proxies)
+
+
 // Middleware setup
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.static("public", { maxAge: "1d" })); // Serve static assets
