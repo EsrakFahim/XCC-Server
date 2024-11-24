@@ -21,7 +21,7 @@ const addTeamMember = asyncHandler(async (req, res) => {
 
       const { avatar } = req.files;
 
-      console.log("Request body:", req.body);
+      // console.log("Request body:", req.body);
 
       // Validate mandatory fields
       if (!name || !position || !experience || !email || !avatar) {
@@ -49,16 +49,16 @@ const addTeamMember = asyncHandler(async (req, res) => {
                   },
                   personalExperience,
                   statistics: {
-                        clientSatisfaction: statistics?.clientSatisfaction || 0,
-                        happyClients: statistics?.happyClients || 0,
-                        projectsDone: statistics?.projectsDone || 0,
-                        successRate: statistics?.successRate || 0,
+                        clientSatisfaction: parseInt(statistics?.clientSatisfaction) || 0,
+                        happyClients: parseInt(statistics?.happyClients) || 0,
+                        projectsDone: parseInt(statistics?.projectsDone) || 0,
+                        successRate: parseInt(statistics?.successRate) || 0,
                   },
                   education: education || [],
                   languages: languages || [],
             });
 
-            console.log("New member added:", newMember);
+            // console.log("New member added:", newMember);
 
             return res.status(201).json(new apiResponse(201, newMember, "Member added successfully."));
       } catch (error) {

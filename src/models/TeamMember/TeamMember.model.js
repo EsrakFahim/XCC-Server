@@ -68,7 +68,7 @@ const memberSchema = new Schema(
                   {
                         degree: { type: String, trim: true },
                         institution: { type: String, trim: true },
-                        year: { type: Number },
+                        year: { type: String, trim: true },
                   },
             ],
 
