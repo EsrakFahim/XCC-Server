@@ -15,8 +15,11 @@ const app = express();
 const allowedOrigins = [
       "https://xcc-dashboard.vercel.app",
       "https://xavironconstructioncorp.com",
-      "https://www.xavironconstructioncorp.com"
+      "https://www.xavironconstructioncorp.com",
+      "http://localhost:3036"
 ];
+
+console.log("Allowed origins:", allowedOrigins);
 
 const corsOptions = {
       origin: (origin, callback) => {
