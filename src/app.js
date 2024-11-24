@@ -13,7 +13,7 @@ dotenv.config();
 const app = express();
 
 // CORS configuration
-const isProduction = process.env.NODE_ENV === "production";
+const isProduction = "production" === "production";
 const allowedOrigins = isProduction
       ? ["https://xcc-dashboard-v11.vercel.app", "https://www.xavironconstructioncorp.com"]
       : ["http://localhost:5173", "http://localhost:3036"];
