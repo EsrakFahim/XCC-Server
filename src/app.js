@@ -27,16 +27,18 @@ const corsOptions = {
             }
       },
       credentials: true, // Allow cookies
-      optionsSuccessStatus: 200,
+      optionsSuccessStatus: 200, // For older browsers
 };
 
 // Middleware setup
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.static("public", { maxAge: "1d" })); // Serve static assets
 app.use(cors(corsOptions));
+app.options("*", cors(corsOptions)); // Handle preflight requests globally
+
 app.use(
       helmet({
-            contentSecurityPolicy: false, // Allow inline scripts/styles if needed
+            contentSecurityPolicy: false, // Disable CSP for inline scripts/styles if needed
       })
 );
 app.use(compression()); // Compress responses
