@@ -11,34 +11,29 @@ import morgan from "morgan";
 dotenv.config();
 
 const app = express();
-
 // CORS configuration
-const isProduction = "production" === "production";
-// const allowedOrigins = isProduction
-//       ? ["https://xcc-dashboard-v11.vercel.app", "https://www.xavironconstructioncorp.com", "https://www.xavironconstructioncorp.com/admin"]
-//       : ["http://localhost:5173", "http://localhost:3036"];
-
-// console.log(allowedOrigins);
-
-const allowedOrigins = '*';
+const allowedOrigins = [
+      "https://xcc-dashboard.vercel.app",
+];
 
 const corsOptions = {
       origin: (origin, callback) => {
+            // Allow requests with no origin (like mobile apps or curl requests)
             if (!origin || allowedOrigins.includes(origin)) {
                   callback(null, true);
             } else {
                   callback(new Error("Not allowed by CORS"));
             }
       },
-      credentials: true, // Allow cookies
-      optionsSuccessStatus: 200, // For older browsers
+      credentials: true, // Allow cookies to be sent
+      optionsSuccessStatus: 200, // For legacy browser support
 };
 
 // Middleware setup
 app.use(morgan("dev")); // Log HTTP requests
 app.use(express.static("public", { maxAge: "1d" })); // Serve static assets
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions)); // Handle preflight requests globally
+// app.options("*", cors(corsOptions)); // Handle preflight requests globally
 
 app.use(
       helmet({
